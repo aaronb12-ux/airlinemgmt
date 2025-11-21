@@ -4,8 +4,9 @@
 class Reservation { 
     public:
         Passenger passenger;
-        Flight flight;
         int confirmationNumber;
+        int seatrow;
+        char seatcol;
 
-        Reservation(Passenger p, Flight f, int c) : passenger {p}, flight {f}, confirmationNumber {c} {}
+        Reservation(Passenger p, int cn, int r, int c) : passenger {p}, confirmationNumber {cn}, seatrow {r}, seatcol {c} {}
 };
