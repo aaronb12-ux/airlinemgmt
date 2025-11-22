@@ -1,5 +1,4 @@
-#include <Passenger.hpp>
-#include <Flight.hpp>
+
 
 class Reservation { 
     public:
@@ -8,5 +7,5 @@ class Reservation {
         int seatrow;
         char seatcol;
 
-        Reservation(Passenger p, int cn, int r, int c) : passenger {p}, confirmationNumber {cn}, seatrow {r}, seatcol {c} {}
+        Reservation(Passenger p, int cn, int r, int c) : passenger {p}, confirmationNumber {cn}, seatrow {r}, seatcol {static_cast<char>(c)} {}
 };

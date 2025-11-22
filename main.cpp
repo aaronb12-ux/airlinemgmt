@@ -77,6 +77,26 @@ char makeChoice()
     return choice;
 }
 
+int convertCol(char col) {
+
+    switch (col) {
+        case 'A':
+            return 1;
+        case 'B':
+            return 2;
+        case 'C':
+            return 3;
+        case 'D':
+            return 4;
+        case 'E':
+            return 5;
+        default:
+            break;
+    }
+    return col;
+}
+
+
 std::vector<Flight> getFlights()
 {
     std::vector<Flight> flights;
@@ -111,7 +131,7 @@ std::vector<Flight> getFlights()
     return flights;
 }
 
-bool seatIsTaken(int flightnum, int r, int c) {
+bool seatIsTaken(int flightnum, int r, char c) {
     //query reservations.csv by flight number
     //find all reservatons by flight number and store in std::vector<Reservations>
 
@@ -135,11 +155,15 @@ bool seatIsTaken(int flightnum, int r, int c) {
             row.push_back(cell);
         }
 
-        if (std::stoi(row[0]) == flightnum && (std::stoi(row[3]) == r && std::stoi(row[4]) != c))  {
-                //return true as seat is taken
+        std::string new_cell = row[4];
+        char char_row = new_cell[0];
+
+        if (std::stoi(row[0]) == flightnum && (std::stoi(row[3]) == r && char_row == c))  {
                 return true;
         }
+         
     }
+    return false;
 }
 
 int main()
@@ -166,17 +190,15 @@ int main()
         std::cin >> row;
         std::cout << "Select a column A - E: ";
         std::cin >> col;
-
-        if (!seatIsTaken(flightNumber, row, col)) {
+      
+        if (seatIsTaken(flightNumber, row, col)) {
             //checking if the seat is taken
+            std::cout << "seat is taken";
+        } else {
+            std::cout << "seat is not taken";
+            //save char col to file, not int col
         }
-
-
-
-        
-
-
-        
+    
     }
 
     return 0;
