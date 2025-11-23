@@ -20,9 +20,12 @@ void displayWelcome()
     std::cout << "|--------------------------|" << std::endl;
 }
 
-void showAvailableSeats(int flightnumber) {
+void showAvailableSeats(int flightnumber)
+{
 
-    //get available seats but for flight number... implement this later
+    // get available seats but for flight number... implement this later
+    // get all reservations by flight number
+    // get all seats and then fill in with x if taken
 
     std::cout << "\n";
     std::cout << "      AIRPLANE SEATING CHART" << std::endl;
@@ -48,12 +51,13 @@ void showAvailableSeats(int flightnumber) {
     std::cout << "\n";
     std::cout << "    O = Available   X = Taken" << std::endl;
     std::cout << "\n";
-
 }
 
-int showFlights(std::vector<Flight> flights) {
+int showFlights(std::vector<Flight> flights)
+{
 
-    for (const auto& flight : flights) {
+    for (const auto &flight : flights)
+    {
         std::cout << "\n";
         std::cout << "Flight Number: " + std::to_string(flight.flightID) << std::endl;
         std::cout << "Source: " + flight.source << std::endl;
@@ -76,26 +80,6 @@ char makeChoice()
     std::cin >> choice;
     return choice;
 }
-
-int convertCol(char col) {
-
-    switch (col) {
-        case 'A':
-            return 1;
-        case 'B':
-            return 2;
-        case 'C':
-            return 3;
-        case 'D':
-            return 4;
-        case 'E':
-            return 5;
-        default:
-            break;
-    }
-    return col;
-}
-
 
 std::vector<Flight> getFlights()
 {
@@ -123,7 +107,7 @@ std::vector<Flight> getFlights()
             row.push_back(cell);
         }
 
-        Flight newFlight(std::stoi(row[0]), row[1], row[2], row[3], row[4]); //constructing new flight
+        Flight newFlight(std::stoi(row[0]), row[1], row[2], row[3], row[4]); // constructing new flight
         flights.push_back(newFlight);
     }
     file.close();
@@ -131,13 +115,15 @@ std::vector<Flight> getFlights()
     return flights;
 }
 
-bool seatIsTaken(int flightnum, int r, char c) {
-    //query reservations.csv by flight number
-    //find all reservatons by flight number and store in std::vector<Reservations>
+bool seatIsTaken(int flightnum, int r, char c)
+{
+    // query reservations.csv by flight number
+    // find all reservatons by flight number and store in std::vector<Reservations>
 
     std::ifstream file("reservations.csv");
 
-    if (!file.is_open()) {
+    if (!file.is_open())
+    {
         std::cerr << "failed to check reservations" << std::endl;
         return false;
     }
@@ -158,12 +144,54 @@ bool seatIsTaken(int flightnum, int r, char c) {
         std::string new_cell = row[4];
         char char_row = new_cell[0];
 
-        if (std::stoi(row[0]) == flightnum && (std::stoi(row[3]) == r && char_row == c))  {
-                return true;
+        if (std::stoi(row[0]) == flightnum && (std::stoi(row[3]) == r && char_row == c))
+        {
+            return true;
         }
-         
     }
     return false;
+}
+
+void writeToReservationCSV(Reservation reservation, int flightnum)
+{
+    std::ofstream outputFile;
+    outputFile.open("reservations.csv", std::ios::app); // for appending to file
+
+    if (!outputFile.is_open())
+    {
+        std::cerr << "error opening file. terminating program";
+    }
+
+    std::cout << reservation.passenger.firstName;
+
+    outputFile << flightnum << "," << reservation.passenger.firstName << "," << reservation.passenger.lastName << "," << reservation.seatrow << "," << reservation.seatcol << "\n";
+    outputFile.close();
+}
+
+std::pair<int, char> getRowandCol()
+{
+    int row;
+    char col;
+
+    std::cout << "Select a row 1 - 10: ";
+    std::cin >> row;
+    std::cout << "Select a column A - E: ";
+    std::cin >> col;
+    return {row, col};
+}
+
+std::pair<std::string, std::string> getFirstandLast() {
+    
+    std::string first;
+    std::string last;
+
+    std::cout << "Enter your first name: ";
+    std::cin >> first;
+
+    std::cout << "Enter your last name: ";
+    std::cin >> last;
+
+    return {first, last};
 }
 
 int main()
@@ -172,7 +200,7 @@ int main()
     displayWelcome();
     char choice = makeChoice();
 
-    if (choice == '1') //booking a flight
+    if (choice == '1') // booking a flight
     {
         // load in flight info from flights.csv
         // store in vector of Flight objects
@@ -182,23 +210,32 @@ int main()
 
         std::cout << "Above is the available seating for flight ";
         std::cout << flightNumber << std::endl;
-        
-        int row;
-        char col;
 
-        std::cout << "Select a row 1 - 10: ";
-        std::cin >> row;
-        std::cout << "Select a column A - E: ";
-        std::cin >> col;
-      
-        if (seatIsTaken(flightNumber, row, col)) {
-            //checking if the seat is taken
-            std::cout << "seat is taken";
-        } else {
-            std::cout << "seat is not taken";
-            //save char col to file, not int col
+        bool validSeat = false;
+
+        int row;
+        int col;
+
+        while (!validSeat)
+        {
+            auto [row, col] = getRowandCol();
+
+            if (seatIsTaken(flightNumber, row, col))
+            {
+                // checking if the seat is taken
+                std::cout << "seat is taken" << std::endl;
+            }
+            else
+            {
+                validSeat = true;
+
+                auto [first, last] = getFirstandLast();
+
+                Passenger p(first, last);
+                Reservation r(p, row, col);
+                writeToReservationCSV(r, flightNumber);
+            }
         }
-    
     }
 
     return 0;
