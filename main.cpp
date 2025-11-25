@@ -4,6 +4,7 @@
 #include <sstream>
 #include <format>
 #include <filesystem>
+#include <map> 
 #include "Passenger.hpp"
 #include "Flight.hpp"
 #include "Reservation.hpp"
@@ -124,7 +125,7 @@ bool seatIsTaken(int flightnum, int r, char c)
 
     if (!file.is_open())
     {
-        std::cerr << "failed to check reservations" << std::endl;
+        std::cerr << "failed to open 'reservations.csv'" << std::endl;
         return false;
     }
 
@@ -152,7 +153,7 @@ bool seatIsTaken(int flightnum, int r, char c)
     return false;
 }
 
-void writeToReservationCSV(Reservation reservation, int flightnum)
+void writeToReservationCSV(Reservation reservation)
 {
     std::ofstream outputFile;
     outputFile.open("reservations.csv", std::ios::app); // for appending to file
@@ -164,7 +165,7 @@ void writeToReservationCSV(Reservation reservation, int flightnum)
 
     std::cout << reservation.passenger.firstName;
 
-    outputFile << flightnum << "," << reservation.passenger.firstName << "," << reservation.passenger.lastName << "," << reservation.seatrow << "," << reservation.seatcol << "\n";
+    outputFile << reservation.flightNum << "," << reservation.passenger.firstName << "," << reservation.passenger.lastName << "," << reservation.seatrow << "," << reservation.seatcol << "\n";
     outputFile.close();
 }
 
@@ -194,11 +195,74 @@ std::pair<std::string, std::string> getFirstandLast() {
     return {first, last};
 }
 
+void getReservations() {
+    //get reservations -> map from passenger: Passenger -> std::vector<Reservation>;
+    
+    std::map<Passenger, std::vector<Reservation>> reservations;
+
+    std::ifstream file("reservations.csv");
+
+    if (!file.is_open())
+    {
+        std::cerr << "failed to open 'reservations.csv'" << std::endl;
+        return;
+    }
+
+    std::string line;
+
+    while (std::getline(file, line))
+    {
+        std::vector<std::string> row;
+        std::stringstream ss(line);
+        std::string cell;
+
+        while (std::getline(ss, cell, ','))
+        {
+            row.push_back(cell);
+        }
+
+        //we now have the entire row
+        //row[0] = flightNum -> string
+        //row[1] = firstname -> string
+        //row[2] = lastname -> string
+        //row[3] = row -> string
+        //row[4] = col -> string
+
+        Passenger p(row[1], row[2]);
+        std::cout << p.firstName << std::endl;
+        std::cout << p.lastName << std::endl;
+
+        //need to convert from string -> char -> int..
+        //std::string col_string = row[4];
+        //char col = col_string[0];
+
+        //int flightnum = std::stoi(row[0]); 
+        //int ro = std::stoi(row[3]);
+
+        //Reservation r(flightnum, p, ro, col);
+
+        /*
+        for (auto item: row) {
+            std::cout << item << std::endl;
+        }
+        */
+        
+        return;
+        
+
+
+        
+        
+    }
+       
+}
+
 int main()
 {
-
+    getReservations();
     displayWelcome();
     char choice = makeChoice();
+    //getReservations();
 
     if (choice == '1') // booking a flight
     {
@@ -216,7 +280,7 @@ int main()
         int row;
         int col;
 
-        while (!validSeat)
+        while (!validSeat) 
         {
             auto [row, col] = getRowandCol();
 
@@ -232,8 +296,8 @@ int main()
                 auto [first, last] = getFirstandLast();
 
                 Passenger p(first, last);
-                Reservation r(p, row, col);
-                writeToReservationCSV(r, flightNumber);
+                Reservation r(flightNumber,p, row, col);
+                writeToReservationCSV(r);
             }
         }
     }
