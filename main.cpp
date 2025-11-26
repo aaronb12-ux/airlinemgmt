@@ -195,7 +195,9 @@ std::pair<std::string, std::string> getFirstandLast() {
     return {first, last};
 }
 
-void getReservations() {
+
+/*
+std::map<Passenger, std::vector<Reservation>> getReservations() {
     //get reservations -> map from passenger: Passenger -> std::vector<Reservation>;
     
     std::map<Passenger, std::vector<Reservation>> reservations;
@@ -205,7 +207,7 @@ void getReservations() {
     if (!file.is_open())
     {
         std::cerr << "failed to open 'reservations.csv'" << std::endl;
-        return;
+       
     }
 
     std::string line;
@@ -229,64 +231,110 @@ void getReservations() {
         //row[4] = col -> string
 
         Passenger p(row[1], row[2]);
-        std::cout << p.firstName << std::endl;
-        std::cout << p.lastName << std::endl;
+        
+         std::cout << "the first name is" << p.firstName << std::endl;
+                std::cout << "the last name is" << p.lastName << std::endl;
 
-        //need to convert from string -> char -> int..
-        //std::string col_string = row[4];
-        //char col = col_string[0];
+                int flightNum = std::stoi(row[0]);
+                std::cout << "the flight number is" << flightNum << std::endl;
 
-        //int flightnum = std::stoi(row[0]); 
-        //int ro = std::stoi(row[3]);
+                int rowNum = std::stoi(row[3]);
+                std::cout << "the row number is" << rowNum << std::endl;
 
-        //Reservation r(flightnum, p, ro, col);
+                std::string col_string = row[4];
+                char col = col_string[0];
 
-        /*
-        for (auto item: row) {
-            std::cout << item << std::endl;
+                std::cout << "the col is" << col << std::endl;
+
+                Reservation r(flightNum, p, rowNum, col);
+
+        //passnger is not in map yet. create new vector and add to map
+       
+        if (reservations.find(p) == reservations.end()) {
+
+                std::vector<Reservation> res;
+
+                res.push_back(r);
+               
+                reservations.insert({p, res});
+        } else {
+
+            reservations[p].push_back(r);
         }
-        */
-        
-        return;
-        
+                   
+    }
 
+    return reservations;
 
-        
+}
+*/
+
+std::map<int, Passenger> getPassengers() {
+    //read passengers to csv
+    //create a map that maps the id -> passenger
+     std::ifstream file("passengers.csv");
+     std::map<int, Passenger> passengers;
+
+    if (!file.is_open())
+    {
+        std::cerr << "failed to open 'reservations.csv'" << std::endl;
+    }
+
+    std::string line;
+
+    while (std::getline(file, line))
+    {
+        std::vector<std::string> row;
+        std::stringstream ss(line);
+        std::string cell;
+
+        while (std::getline(ss, cell, ','))
+        {
+            row.push_back(cell);
+        }
+        std::cout << row[0] << row[1] << row[2];
+
+        Passenger p(row[0], row[1], std::stoi(row[2]));
+
+        passengers.insert({std::stoi(row[2]), p});
         
     }
-       
+    return passengers;
 }
+
+
 
 int main()
 {
-    getReservations();
+    //getReservations();
     displayWelcome();
     char choice = makeChoice();
-    //getReservations();
+    //auto res = getReservations();
+    std::map<int, Passenger> passengers = getPassengers(); //map that maps id to a passenger
 
+    for (const auto pair : passengers) {
+            std::cout << "The passengers id is: " << pair.first << std::endl;
+            std::cout << "The passengers first name is is: " << pair.second.firstName << std::endl;
+            std::cout << "The passengers first name is is: " << pair.second.lastName << std::endl;
+    }
+/*
     if (choice == '1') // booking a flight
     {
-        // load in flight info from flights.csv
-        // store in vector of Flight objects
-        auto flights = getFlights();
-        int flightNumber = showFlights(flights);
-        showAvailableSeats(flightNumber);
+        auto flights = getFlights(); //getting all the flights
+        int flightNumber = showFlights(flights); //showing flights and getting flight number
+        showAvailableSeats(flightNumber); //showing available seats for flight number
 
-        std::cout << "Above is the available seating for flight ";
-        std::cout << flightNumber << std::endl;
+        std::cout << "Above is the available seating for flight " << flightNumber << std::endl;;
 
         bool validSeat = false;
 
-        int row;
-        int col;
-
         while (!validSeat) 
         {
+
             auto [row, col] = getRowandCol();
 
             if (seatIsTaken(flightNumber, row, col))
             {
-                // checking if the seat is taken
                 std::cout << "seat is taken" << std::endl;
             }
             else
@@ -295,12 +343,14 @@ int main()
 
                 auto [first, last] = getFirstandLast();
 
+                auto userId = getUserID(first, last)
+
                 Passenger p(first, last);
                 Reservation r(flightNumber,p, row, col);
                 writeToReservationCSV(r);
             }
         }
     }
-
+*/
     return 0;
 }

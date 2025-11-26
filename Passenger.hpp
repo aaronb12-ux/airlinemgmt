@@ -6,6 +6,7 @@ class Passenger {
     public:
         std::string firstName;
         std::string lastName;
-        Passenger(std::string first, std::string last) : firstName {first}, lastName {last} {} //constructor
+        int id;
+        Passenger(std::string first, std::string last, int id) : firstName {first}, lastName {last}, id {id} {} //constructor
 
 };
