@@ -5,6 +5,7 @@
 #include <format>
 #include <filesystem>
 #include <map> 
+#include <typeinfo>
 #include "Passenger.hpp"
 #include "Flight.hpp"
 #include "Reservation.hpp"
@@ -196,11 +197,10 @@ std::pair<std::string, std::string> getFirstandLast() {
 }
 
 
-/*
-std::map<Passenger, std::vector<Reservation>> getReservations() {
-    //get reservations -> map from passenger: Passenger -> std::vector<Reservation>;
+
+std::map<int, std::vector<Reservation>> getReservations(std::map<int, Passenger> passengers) {
     
-    std::map<Passenger, std::vector<Reservation>> reservations;
+    std::map<int, std::vector<Reservation>> reservations;
 
     std::ifstream file("reservations.csv");
 
@@ -214,6 +214,7 @@ std::map<Passenger, std::vector<Reservation>> getReservations() {
 
     while (std::getline(file, line))
     {
+    
         std::vector<std::string> row;
         std::stringstream ss(line);
         std::string cell;
@@ -222,52 +223,38 @@ std::map<Passenger, std::vector<Reservation>> getReservations() {
         {
             row.push_back(cell);
         }
-
-        //we now have the entire row
-        //row[0] = flightNum -> string
-        //row[1] = firstname -> string
-        //row[2] = lastname -> string
-        //row[3] = row -> string
-        //row[4] = col -> string
-
-        Passenger p(row[1], row[2]);
+        std::cout << "we are hereeeee.";
+        std::cout << row.size();
         
-         std::cout << "the first name is" << p.firstName << std::endl;
-                std::cout << "the last name is" << p.lastName << std::endl;
+        int passengerID = std::stoi(row[1]);
+    
+        Passenger p = passengers.at(passengerID);
 
-                int flightNum = std::stoi(row[0]);
-                std::cout << "the flight number is" << flightNum << std::endl;
+        if (reservations.find(p.id) == reservations.end()) {
+            
+            std::vector<Reservation> res;
 
-                int rowNum = std::stoi(row[3]);
-                std::cout << "the row number is" << rowNum << std::endl;
+            std::cout << "heree";
 
-                std::string col_string = row[4];
-                char col = col_string[0];
+            std::string collCell = row[3];
+            char charCol = collCell[0];
 
-                std::cout << "the col is" << col << std::endl;
+            Reservation r(std::stoi(row[0]), p, std::stoi(row[2]), charCol);
 
-                Reservation r(flightNum, p, rowNum, col);
+            res.push_back(r);
 
-        //passnger is not in map yet. create new vector and add to map
-       
-        if (reservations.find(p) == reservations.end()) {
-
-                std::vector<Reservation> res;
-
-                res.push_back(r);
-               
-                reservations.insert({p, res});
-        } else {
-
-            reservations[p].push_back(r);
+            reservations[p.id] = res;
+        }   else {
+            continue;
         }
-                   
+        
     }
 
+    std::cout << "returning now...";
     return reservations;
 
 }
-*/
+
 
 std::map<int, Passenger> getPassengers() {
     //read passengers to csv
@@ -292,12 +279,10 @@ std::map<int, Passenger> getPassengers() {
         {
             row.push_back(cell);
         }
-        std::cout << row[0] << row[1] << row[2];
-
+     
         Passenger p(row[0], row[1], std::stoi(row[2]));
 
         passengers.insert({std::stoi(row[2]), p});
-        
     }
     return passengers;
 }
@@ -308,19 +293,15 @@ int main()
 {
     //getReservations();
     displayWelcome();
-    char choice = makeChoice();
-    //auto res = getReservations();
     std::map<int, Passenger> passengers = getPassengers(); //map that maps id to a passenger
+    std::vector<Flight> flights = getFlights(); 
+    char choice = makeChoice();
+    std::map<int, std::vector<Reservation>> reservations = getReservations(passengers);
 
-    for (const auto pair : passengers) {
-            std::cout << "The passengers id is: " << pair.first << std::endl;
-            std::cout << "The passengers first name is is: " << pair.second.firstName << std::endl;
-            std::cout << "The passengers first name is is: " << pair.second.lastName << std::endl;
-    }
-/*
+    /*
     if (choice == '1') // booking a flight
     {
-        auto flights = getFlights(); //getting all the flights
+
         int flightNumber = showFlights(flights); //showing flights and getting flight number
         showAvailableSeats(flightNumber); //showing available seats for flight number
 
@@ -351,6 +332,6 @@ int main()
             }
         }
     }
-*/
+        */
     return 0;
 }
