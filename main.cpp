@@ -4,8 +4,9 @@
 #include <sstream>
 #include <format>
 #include <filesystem>
-#include <map> 
+#include <map>
 #include <typeinfo>
+#include <tuple>
 #include "Passenger.hpp"
 #include "Flight.hpp"
 #include "Reservation.hpp"
@@ -143,13 +144,15 @@ bool seatIsTaken(int flightnum, int r, char c)
             row.push_back(cell);
         }
 
-        std::string new_cell = row[4];
+        std::string new_cell = row[3];
         char char_row = new_cell[0];
 
-        if (std::stoi(row[0]) == flightnum && (std::stoi(row[3]) == r && char_row == c))
+
+        if (std::stoi(row[0]) == flightnum && (std::stoi(row[2]) == r && char_row == c))
         {
             return true;
         }
+            
     }
     return false;
 }
@@ -172,6 +175,7 @@ void writeToReservationCSV(Reservation reservation)
 
 std::pair<int, char> getRowandCol()
 {
+
     int row;
     char col;
 
@@ -182,8 +186,9 @@ std::pair<int, char> getRowandCol()
     return {row, col};
 }
 
-std::pair<std::string, std::string> getFirstandLast() {
-    
+std::pair<std::string, std::string> getFirstandLast()
+{
+
     std::string first;
     std::string last;
 
@@ -196,75 +201,74 @@ std::pair<std::string, std::string> getFirstandLast() {
     return {first, last};
 }
 
-
-
-std::map<int, std::vector<Reservation>> getReservations(std::map<int, Passenger> passengers) {
-    
+std::map<int, std::vector<Reservation>> getReservations(const std::map<int, Passenger> &passengers)
+{
     std::map<int, std::vector<Reservation>> reservations;
 
     std::ifstream file("reservations.csv");
-
     if (!file.is_open())
     {
-        std::cerr << "failed to open 'reservations.csv'" << std::endl;
-       
+        std::cerr << "Failed to open reservations.csv\n";
+        return reservations; // return empty
     }
 
     std::string line;
-
     while (std::getline(file, line))
     {
-    
-        std::vector<std::string> row;
         std::stringstream ss(line);
         std::string cell;
+        std::vector<std::string> row;
 
         while (std::getline(ss, cell, ','))
         {
             row.push_back(cell);
         }
-        std::cout << "we are hereeeee.";
-        std::cout << row.size();
-        
-        int passengerID = std::stoi(row[1]);
-    
-        Passenger p = passengers.at(passengerID);
 
-        if (reservations.find(p.id) == reservations.end()) {
-            
-            std::vector<Reservation> res;
-
-            std::cout << "heree";
-
-            std::string collCell = row[3];
-            char charCol = collCell[0];
-
-            Reservation r(std::stoi(row[0]), p, std::stoi(row[2]), charCol);
-
-            res.push_back(r);
-
-            reservations[p.id] = res;
-        }   else {
+        if (row.size() < 4)
+        {
+            std::cerr << "Malformed row: " << line << "\n";
             continue;
         }
-        
+
+        int passengerID = std::stoi(row[1]);
+
+        // SAFE lookup
+        auto passIt = passengers.find(passengerID);
+
+        if (passIt == passengers.end())
+        {
+            std::cerr << "Passenger ID " << passengerID
+                      << " not found in passengers map!\n";
+            continue;
+        }
+
+        const Passenger &p = passIt->second; // no copy
+
+        // Extract reservation details
+        int flightNum = std::stoi(row[0]);
+        int rowNum = std::stoi(row[2]);
+        char seatCol = row[3][0];
+
+        // Build reservation
+        Reservation r(flightNum, p, rowNum, seatCol);
+
+        // Insert directly into vector (auto-creates if missing)
+        reservations[p.id].push_back(r);
     }
 
-    std::cout << "returning now...";
     return reservations;
-
 }
 
-
-std::map<int, Passenger> getPassengers() {
-    //read passengers to csv
-    //create a map that maps the id -> passenger
-     std::ifstream file("passengers.csv");
-     std::map<int, Passenger> passengers;
+std::map<int, Passenger> getPassengers()
+{
+    // read passengers to csv
+    // create a map that maps the id -> passenger
+    std::ifstream file("passengers.csv");
+    std::map<int, Passenger> passengers;
 
     if (!file.is_open())
     {
-        std::cerr << "failed to open 'reservations.csv'" << std::endl;
+        std::cerr << "failed to open 'passengers.csv'" << std::endl;
     }
 
     std::string line;
@@ -279,7 +283,7 @@ std::map<int, Passenger> getPassengers() {
         {
             row.push_back(cell);
         }
-     
+
         Passenger p(row[0], row[1], std::stoi(row[2]));
 
         passengers.insert({std::stoi(row[2]), p});
@@ -287,51 +291,126 @@ std::map<int, Passenger> getPassengers() {
     return passengers;
 }
 
+bool askFirstReservation()
+{
+    char response;
 
+    std::cout << "Have you made a reservation with us before? Enter 'Y' (Yes) or 'N' (No): ";
+
+    std::cin >> response;
+
+    return response == 'Y';
+}
+
+std::tuple<std::string, std::string, int> getUserInfo()
+{
+
+    std::string first;
+    std::string last;
+    int id;
+
+    std::cout << "Checking to see if you are in our system..." << std::endl;
+
+    std::cout << "Enter your first name: ";
+    std::cin >> first;
+
+    std::cout << "Enter your last name: ";
+    std::cin >> last;
+
+    std::cout << "Enter your unique id";
+    std::cin >> id;
+
+    return {first, last, id};
+}
+
+Passenger isValidPassenger(std::string first, std::string last, int id, std::map<int, Passenger> &passengers)
+{
+
+    auto passIt = passengers.find(id);
+
+    if (passIt == passengers.end())
+    {
+        std::cerr << "Passenger ID " << id
+                  << " not found in passengers map! Did you enter the correct ID?\n";
+    }
+    else
+    {
+        if (passIt->second.firstName == first && passIt->second.lastName == last)
+        {
+            return passIt->second;
+        }
+    }
+}
+
+bool makeReservation(Passenger p, int flightNumber)
+{
+
+    bool validSeat = false;
+
+    while (!validSeat)
+    {
+        auto [row, col] = getRowandCol();
+
+        std::cout << "the type of row is: " << typeid(row).name() << std::endl;
+        std::cout << "the data of row is: " << row << std::endl;
+
+        std::cout << "the type of col is: " << typeid(col).name() << std::endl;
+        std::cout << "the data of col is: " << col << std::endl;
+
+        
+        if (seatIsTaken(flightNumber, row, col))
+        {
+            std::cout << "seat is taken" << std::endl;
+        }
+        else
+        {
+            bool validSeat = true;
+
+            Reservation r(flightNumber, p, row, col);
+
+            writeToReservationCSV(r);
+            return true;
+        }
+    }
+}
 
 int main()
 {
-    //getReservations();
+
     displayWelcome();
-    std::map<int, Passenger> passengers = getPassengers(); //map that maps id to a passenger
-    std::vector<Flight> flights = getFlights(); 
-    char choice = makeChoice();
+    std::map<int, Passenger> passengers = getPassengers(); // map that maps id to a passenger
+    std::vector<Flight> flights = getFlights();
     std::map<int, std::vector<Reservation>> reservations = getReservations(passengers);
 
-    /*
+    char choice = makeChoice();
+
     if (choice == '1') // booking a flight
     {
 
-        int flightNumber = showFlights(flights); //showing flights and getting flight number
-        showAvailableSeats(flightNumber); //showing available seats for flight number
+        int flightNumber = showFlights(flights); // showing flights and getting flight number
+        showAvailableSeats(flightNumber);        // showing available seats for flight number
 
-        std::cout << "Above is the available seating for flight " << flightNumber << std::endl;;
+        std::cout << "Above is the available seating for flight " << flightNumber << std::endl;
+        ;
 
         bool validSeat = false;
 
-        while (!validSeat) 
+        while (!validSeat)
         {
 
-            auto [row, col] = getRowandCol();
+            char firstReservation = askFirstReservation();
 
-            if (seatIsTaken(flightNumber, row, col))
+            if (firstReservation)
             {
-                std::cout << "seat is taken" << std::endl;
-            }
-            else
-            {
-                validSeat = true;
 
-                auto [first, last] = getFirstandLast();
+                auto [first, last, id] = getUserInfo();
 
-                auto userId = getUserID(first, last)
+                Passenger p = isValidPassenger(first, last, id, passengers);
 
-                Passenger p(first, last);
-                Reservation r(flightNumber,p, row, col);
-                writeToReservationCSV(r);
+                bool success = makeReservation(p, flightNumber);
             }
         }
     }
-        */
+
     return 0;
 }
