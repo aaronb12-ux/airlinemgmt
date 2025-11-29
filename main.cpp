@@ -7,53 +7,58 @@
 #include <map>
 #include <typeinfo>
 #include <tuple>
+#include <iomanip>
+#include <string>
+#include <cstdlib>
+#include <ctime>
+#include <random>
 #include "Passenger.hpp"
 #include "Flight.hpp"
 #include "Reservation.hpp"
 
 void displayWelcome()
 {
-    std::cout << "|--------------------------|" << std::endl;
-    std::cout << "|Airline Reservation System|" << std::endl;
-    std::cout << "|--------------------------|" << std::endl;
-    std::cout << "|1. Book Flight            |" << std::endl;
-    std::cout << "|2. View Reservations      |" << std::endl;
-    std::cout << "|3. Cancel Booking         |" << std::endl;
-    std::cout << "|4. Exit                   |" << std::endl;
-    std::cout << "|--------------------------|" << std::endl;
+    std::cout << "\n╔════════════════════════════════════════════════════════════╗\n";
+    std::cout << "║            AIRLINE RESERVATION SYSTEM                      ║\n";
+    std::cout << "╠════════════════════════════════════════════════════════════╣\n";
+    std::cout << "║ 1. Book Flight                                             ║\n";
+    std::cout << "║ 2. View Reservations                                       ║\n";
+    std::cout << "║ 3. Cancel Booking                                          ║\n";
+    std::cout << "║ 4. Exit                                                    ║\n";
+    std::cout << "╚════════════════════════════════════════════════════════════╝\n\n";
 }
 
 void showAvailableSeats(int flightnumber)
 {
-
     // get available seats but for flight number... implement this later
     // get all reservations by flight number
     // get all seats and then fill in with x if taken
 
-    std::cout << "\n";
-    std::cout << "      AIRPLANE SEATING CHART" << std::endl;
-    std::cout << "     =========================" << std::endl;
-    std::cout << "\n";
-    std::cout << "           [COCKPIT]" << std::endl;
-    std::cout << "     _____________________" << std::endl;
-    std::cout << "    |                     |" << std::endl;
-    std::cout << "    |  A  B     C  D  E   |" << std::endl;
-    std::cout << "    |                     |" << std::endl;
-    std::cout << " 1  |  O  O     O  O  O   |" << std::endl;
-    std::cout << " 2  |  O  O     O  O  O   |" << std::endl;
-    std::cout << " 3  |  O  O     O  O  O   |" << std::endl;
-    std::cout << " 4  |  O  O     O  O  O   |" << std::endl;
-    std::cout << " 5  |  O  O     O  O  O   |" << std::endl;
-    std::cout << " 6  |  O  O     O  O  O   |" << std::endl;
-    std::cout << " 7  |  O  O     O  O  O   |" << std::endl;
-    std::cout << " 8  |  O  O     O  O  O   |" << std::endl;
-    std::cout << " 9  |  O  O     O  O  O   |" << std::endl;
-    std::cout << "10  |  O  O     O  O  O   |" << std::endl;
-    std::cout << "    |                     |" << std::endl;
-    std::cout << "    |_____________________|" << std::endl;
-    std::cout << "\n";
-    std::cout << "    O = Available   X = Taken" << std::endl;
-    std::cout << "\n";
+    std::cout << "\n╔════════════════════════════════════════════════════════════╗\n";
+    std::cout << "║              AIRPLANE SEATING CHART                        ║\n";
+    std::cout << "╠════════════════════════════════════════════════════════════╣\n";
+    std::cout << "║                                                            ║\n";
+    std::cout << "║                      [COCKPIT]                             ║\n";
+    std::cout << "║                _____________________                       ║\n";
+    std::cout << "║               |                     |                      ║\n";
+    std::cout << "║               |  A  B     C  D  E   |                      ║\n";
+    std::cout << "║               |                     |                      ║\n";
+    std::cout << "║            1  |  O  O     O  O  O   |                      ║\n";
+    std::cout << "║            2  |  O  O     O  O  O   |                      ║\n";
+    std::cout << "║            3  |  O  O     O  O  O   |                      ║\n";
+    std::cout << "║            4  |  O  O     O  O  O   |                      ║\n";
+    std::cout << "║            5  |  O  O     O  O  O   |                      ║\n";
+    std::cout << "║            6  |  O  O     O  O  O   |                      ║\n";
+    std::cout << "║            7  |  O  O     O  O  O   |                      ║\n";
+    std::cout << "║            8  |  O  O     O  O  O   |                      ║\n";
+    std::cout << "║            9  |  O  O     O  O  O   |                      ║\n";
+    std::cout << "║           10  |  O  O     O  O  O   |                      ║\n";
+    std::cout << "║               |                     |                      ║\n";
+    std::cout << "║               |_____________________|                      ║\n";
+    std::cout << "║                                                            ║\n";
+    std::cout << "║               O = Available   X = Taken                    ║\n";
+    std::cout << "║                                                            ║\n";
+    std::cout << "╚════════════════════════════════════════════════════════════╝\n\n";
 }
 
 int showFlights(std::vector<Flight> flights)
@@ -167,9 +172,7 @@ void writeToReservationCSV(Reservation reservation)
         std::cerr << "error opening file. terminating program";
     }
 
-    std::cout << reservation.passenger.firstName;
-
-    outputFile << reservation.flightNum << "," << reservation.passenger.firstName << "," << reservation.passenger.lastName << "," << reservation.seatrow << "," << reservation.seatcol << "\n";
+    outputFile << reservation.flightNum << "," << reservation.passenger.id << "," << reservation.seatrow << "," << reservation.seatcol << "\n";
     outputFile.close();
 }
 
@@ -298,6 +301,7 @@ bool askFirstReservation()
     std::cout << "Have you made a reservation with us before? Enter 'Y' (Yes) or 'N' (No): ";
 
     std::cin >> response;
+    std::cout << "\n";
 
     return response == 'Y';
 }
@@ -317,27 +321,34 @@ std::tuple<std::string, std::string, int> getUserInfo()
     std::cout << "Enter your last name: ";
     std::cin >> last;
 
-    std::cout << "Enter your unique id";
+    std::cout << "Enter your unique id: ";
     std::cin >> id;
+    std::cout << "\n";
 
     return {first, last, id};
 }
 
-Passenger isValidPassenger(std::string first, std::string last, int id, std::map<int, Passenger> &passengers)
+std::tuple<Passenger, bool> isValidPassenger(std::string first, std::string last, int id, std::map<int, Passenger> &passengers)
 {
 
     auto passIt = passengers.find(id);
 
-    if (passIt == passengers.end())
+    if (passIt == passengers.end()) //user enters wrong ID
     {
-        std::cerr << "Passenger ID " << id
-                  << " not found in passengers map! Did you enter the correct ID?\n";
+        std::cerr << "Passenger ID " << id << " not found in passengers map! Did you enter the correct ID?\n" << std::endl;;
+        return {passIt->second, false};
+    }
+    else if (passIt != passengers.end() && passIt->second.firstName != first || passIt->second.lastName != last) //user enters correct ID, but wrong name
+    {
+        std::cerr << "ID does not map to passenger name. " << "Did you enter the correct first and last name?\n" << std::endl;;
+        return {passIt->second, false};
     }
     else
     {
         if (passIt->second.firstName == first && passIt->second.lastName == last)
         {
-            return passIt->second;
+            std::cout << "Passenger verified. Hello " << passIt->second.firstName << " " << passIt->second.lastName << std::endl;
+            return {passIt->second, true};
         }
     }
 }
@@ -350,17 +361,11 @@ bool makeReservation(Passenger p, int flightNumber)
     while (!validSeat)
     {
         auto [row, col] = getRowandCol();
-
-        std::cout << "the type of row is: " << typeid(row).name() << std::endl;
-        std::cout << "the data of row is: " << row << std::endl;
-
-        std::cout << "the type of col is: " << typeid(col).name() << std::endl;
-        std::cout << "the data of col is: " << col << std::endl;
-
-        
+      
         if (seatIsTaken(flightNumber, row, col))
         {
-            std::cout << "seat is taken" << std::endl;
+            std::cout << "That seat is taken. Enter a new seat.\n" << std::endl;
+            
         }
         else
         {
@@ -369,9 +374,66 @@ bool makeReservation(Passenger p, int flightNumber)
             Reservation r(flightNumber, p, row, col);
 
             writeToReservationCSV(r);
+
             return true;
         }
     }
+}
+
+void displayReservations(std::vector<Reservation> r) {
+    if (r.empty()) {
+        std::cout << "\n╔════════════════════════════════════════╗\n";
+        std::cout << "║     No Reservations Found              ║\n";
+        std::cout << "╚════════════════════════════════════════╝\n";
+        return;
+    }
+
+    std::cout << "\n╔════════════════════════════════════════════════════════════╗\n";
+    std::cout << "║                    RESERVATION DETAILS                     ║\n";
+    std::cout << "╠════════════════════════════════════════════════════════════╣\n";
+
+    for (size_t i = 0; i < r.size(); i++) {
+        const auto& res = r[i];
+        
+        std::cout << "║ Flight Number: " << std::left << std::setw(42) 
+                  << res.flightNum << "║\n";
+        
+        std::cout << "║ Passenger:     " << std::setw(42)
+                  << (res.passenger.firstName + " " + res.passenger.lastName) << "║\n";
+        
+        std::string seat = std::to_string(res.seatrow) + res.seatcol;
+        std::cout << "║ Seat:          " << std::setw(42) << seat << "║\n";
+        
+        if (i < r.size() - 1) {
+            std::cout << "╟────────────────────────────────────────────────────────────╢\n";
+        }
+    }
+    
+    std::cout << "╚════════════════════════════════════════════════════════════╝\n\n";
+}
+
+Passenger createNewPassenger() {
+
+    std::string first;
+    std::string last;
+    int id;
+
+    std::cout << "Registering..." << std::endl;
+
+    std::cout << "Enter your first name: ";
+    std::cin >> first;
+
+    std::cout << "Enter your last name: ";
+    std::cin >> last;
+
+    std::random_device rd; //non-deterministic random seed
+    std::mt19937 gen(rd()); //mersenne twister engine
+    std::uniform_int_distribution<> dist(1000, 5000); //range [1000, 5000]
+
+    size_t randomNum = dist(gen);
+
+    std::cout << "random number is" << randomNum;
+
 }
 
 int main()
@@ -384,30 +446,67 @@ int main()
 
     char choice = makeChoice();
 
-    if (choice == '1') // booking a flight
+    if (choice == '1') // making a reservation
     {
 
         int flightNumber = showFlights(flights); // showing flights and getting flight number
         showAvailableSeats(flightNumber);        // showing available seats for flight number
 
         std::cout << "Above is the available seating for flight " << flightNumber << std::endl;
-        ;
+        std::cout << "\n" << std::endl;
 
         bool validSeat = false;
 
         while (!validSeat)
         {
+            char notfirstReservation = askFirstReservation();
 
-            char firstReservation = askFirstReservation();
-
-            if (firstReservation)
+            if (notfirstReservation) //passenger claims they have made a reservation with us before
             {
-
                 auto [first, last, id] = getUserInfo();
 
-                Passenger p = isValidPassenger(first, last, id, passengers);
+                auto [p, isvalid] = isValidPassenger(first, last, id, passengers);
+
+                if (isvalid) {
+
+                     bool success = makeReservation(p, flightNumber);
+
+                    if (success) {
+                        validSeat = true;
+                }
+                }
+            } else { //first reservation: get first, last name and generate an ID
+
+                Passenger p = createNewPassenger();
 
                 bool success = makeReservation(p, flightNumber);
+
+                if (success) {
+                    validSeat = true;
+                }
+
+            }
+        }
+        std::cout << "\nSeat successfully reserved!" << std::endl;;
+    }
+
+    if (choice == '2') {
+        std::cout << "\n";
+        bool validPassenger = false;
+
+        while (!validPassenger) {
+
+            auto [first, last, id] = getUserInfo();
+
+            auto [p, isvalid] = isValidPassenger(first, last, id, passengers);
+
+            if (isvalid) {
+                //now get reservations based off passenger
+
+                std::vector<Reservation> r = reservations.at(p.id);
+                displayReservations(r);
+    
+                validPassenger = true;
             }
         }
     }
