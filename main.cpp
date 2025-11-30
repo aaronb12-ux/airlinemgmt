@@ -172,7 +172,7 @@ void writeToReservationCSV(Reservation reservation)
         std::cerr << "error opening file. terminating program";
     }
 
-    outputFile << reservation.flightNum << "," << reservation.passenger.id << "," << reservation.seatrow << "," << reservation.seatcol << "\n";
+    outputFile << reservation.flightNum << "," << reservation.passenger.id << "," << reservation.seatrow << "," << reservation.seatcol << "," << reservation.confirmation << "\n";
     outputFile.close();
 }
 
@@ -251,9 +251,10 @@ std::map<int, std::vector<Reservation>> getReservations(const std::map<int, Pass
         int flightNum = std::stoi(row[0]);
         int rowNum = std::stoi(row[2]);
         char seatCol = row[3][0];
+        int confirmation = std::stoi(row[4]);
 
         // Build reservation
-        Reservation r(flightNum, p, rowNum, seatCol);
+        Reservation r(flightNum, p, rowNum, seatCol, confirmation);
 
         // Insert directly into vector (auto-creates if missing)
         reservations[p.id].push_back(r);
@@ -326,6 +327,7 @@ std::tuple<std::string, std::string, int> getUserInfo()
     std::cout << "\n";
 
     return {first, last, id};
+
 }
 
 std::tuple<Passenger, bool> isValidPassenger(std::string first, std::string last, int id, std::map<int, Passenger> &passengers)
@@ -353,6 +355,18 @@ std::tuple<Passenger, bool> isValidPassenger(std::string first, std::string last
     }
 }
 
+
+int generateRandom() {
+    
+    std::random_device rd; //non-deterministic random seed
+    std::mt19937 gen(rd()); //mersenne twister engine
+    std::uniform_int_distribution<> dist(1000, 5000); //range [1000, 5000]
+
+    int randomNum = dist(gen);
+
+    return randomNum;
+}
+
 bool makeReservation(Passenger p, int flightNumber)
 {
 
@@ -369,9 +383,9 @@ bool makeReservation(Passenger p, int flightNumber)
         }
         else
         {
-            bool validSeat = true;
+            int confirmation = generateRandom();
 
-            Reservation r(flightNumber, p, row, col);
+            Reservation r(flightNumber, p, row, col, confirmation);
 
             writeToReservationCSV(r);
 
@@ -379,6 +393,7 @@ bool makeReservation(Passenger p, int flightNumber)
         }
     }
 }
+
 
 void displayReservations(std::vector<Reservation> r) {
     if (r.empty()) {
@@ -403,6 +418,9 @@ void displayReservations(std::vector<Reservation> r) {
         
         std::string seat = std::to_string(res.seatrow) + res.seatcol;
         std::cout << "║ Seat:          " << std::setw(42) << seat << "║\n";
+
+        std::string con = std::to_string(res.confirmation);
+        std::cout << "║ Confirmation:  " << std::setw(42) << con << "║\n";
         
         if (i < r.size() - 1) {
             std::cout << "╟────────────────────────────────────────────────────────────╢\n";
@@ -412,7 +430,7 @@ void displayReservations(std::vector<Reservation> r) {
     std::cout << "╚════════════════════════════════════════════════════════════╝\n\n";
 }
 
-Passenger createNewPassenger() {
+Passenger createNewPassenger()  {
 
     std::string first;
     std::string last;
@@ -432,7 +450,33 @@ Passenger createNewPassenger() {
 
     size_t randomNum = dist(gen);
 
-    std::cout << "random number is" << randomNum;
+    Passenger p(first, last, randomNum);
+
+    return p;
+
+}
+
+void writeToPassengerCSV(Passenger p)
+{
+    std::ofstream outputFile;
+    outputFile.open("passengers.csv", std::ios::app); // for appending to file
+
+    if (!outputFile.is_open())
+    {
+        std::cerr << "error opening file. terminating program";
+    }
+
+    outputFile << p.firstName << "," << p.lastName << "," << p.id << "\n";
+    outputFile.close();
+}
+
+bool deleteReservation(std::vector<Reservation> r) {
+
+    int chosenConfirmation;
+    std::cout << "enter in a reservation confirmation to delete...";
+    std::cin >> chosenConfirmation;
+
+    //delete at reservation with the id 
 
 }
 
@@ -479,6 +523,10 @@ int main()
 
                 Passenger p = createNewPassenger();
 
+                writeToPassengerCSV(p);
+
+                std::cout << "Successfully registered: " << p.firstName << " " << p.lastName << " " << "with id: " << p.id << std::endl;
+
                 bool success = makeReservation(p, flightNumber);
 
                 if (success) {
@@ -490,8 +538,9 @@ int main()
         std::cout << "\nSeat successfully reserved!" << std::endl;;
     }
 
-    if (choice == '2') {
+    if (choice == '2' || choice == '3') {
         std::cout << "\n";
+        
         bool validPassenger = false;
 
         while (!validPassenger) {
@@ -504,12 +553,18 @@ int main()
                 //now get reservations based off passenger
 
                 std::vector<Reservation> r = reservations.at(p.id);
+
                 displayReservations(r);
     
                 validPassenger = true;
+
+                if (choice == '3') {
+                    deleteReservation(r);
+                }
             }
         }
     }
+
 
     return 0;
 }
