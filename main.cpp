@@ -5,6 +5,7 @@
 #include <format>
 #include <filesystem>
 #include <map>
+#include <fstream>
 #include <typeinfo>
 #include <tuple>
 #include <iomanip>
@@ -470,14 +471,60 @@ void writeToPassengerCSV(Passenger p)
     outputFile.close();
 }
 
-bool deleteReservation(std::vector<Reservation> r) {
+bool updateReservationsFile( std::map<int, std::vector<Reservation>> allReservations, int userID, int reservationConfirmation) {
+
+    //need to rewrite to the reservations file
+    //except when we hit the key where id == userID, we skip the reservation where its the reservationConfirmation
+    std::ofstream newFile("reservationstemp.csv");
+
+    if (!newFile) {
+        std::cerr << "Error: Could not create file...";
+        return false;
+    }
+
+    newFile.open("reservationstemp.csv", std::ios::app); // for appending to file
+
+    if (!newFile.is_open())
+    {
+        std::cerr << "error opening file. terminating program";
+    }
+
+    for (const auto& id : allReservations) {
+        for (const auto& res : id.second) {
+            if (id.first == userID && res.confirmation == reservationConfirmation) {
+                continue;
+            } else {
+                newFile << res.flightNum << "," << res.passenger.id << "," << res.seatrow << "," << res.seatcol << "," << res.confirmation << "\n";
+            }   
+        }
+        
+    }
+
+
+    return true;
+
+}
+
+
+bool deleteReservation( std::map<int, std::vector<Reservation>> allReservations, std::vector<Reservation> userReservations, int userID) {
+    //r is all reservations for specific passenger
 
     int chosenConfirmation;
-    std::cout << "enter in a reservation confirmation to delete...";
+    std::cout << "Enter in a reservation confirmation to delete: ";
     std::cin >> chosenConfirmation;
 
-    //delete at reservation with the id 
+    std::cout << chosenConfirmation;
 
+
+    for (const auto& reservation : userReservations) {
+
+        if (reservation.confirmation == chosenConfirmation) {
+            //user entered valid reservation -> now update the file
+            updateReservationsFile(allReservations, userID, chosenConfirmation);
+        }       
+    }
+
+    return false;
 }
 
 int main()
@@ -559,7 +606,7 @@ int main()
                 validPassenger = true;
 
                 if (choice == '3') {
-                    deleteReservation(r);
+                    deleteReservation(reservations, r, id);
                 }
             }
         }
