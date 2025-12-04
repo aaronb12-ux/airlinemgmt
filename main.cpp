@@ -31,19 +31,16 @@ void displayWelcome()
 
 void showAvailableSeats(int flightnumber, std::map<int, std::vector<std::tuple<int, char>>> seats)
 {
-    try {
 
-        std::vector<std::tuple<int, char>> flightSeats = seats.at(flightnumber);
-        
-    }  catch (const std::out_of_range& ex) {
-        
+    std::vector<std::tuple<int, char>> flightSeats; //create empty vector for case of missing map key
+    auto it = seats.find(flightnumber); ///.find() returns an iterator that points to an element in the map
+
+    if (it != seats.end()) { //if flightnumber exists as a key in the map, seat flightSeats to its value tuple<row,col>
+        flightSeats = it->second; 
     }
-
-    std::vector<std::tuple<int, char>> flightSeats = seats.at(flightnumber);
-
-
-    // lambda function that takes in the flightseats and current row and column
-    auto checkIfTaken = [&flightSeats](int checkedRow, char checkedCol)
+ 
+    //lambda function to quickly check if a seat is taken
+    auto checkIfTaken = [&flightSeats](int checkedRow, char checkedCol) 
     {
         for (const auto &takenSeat : flightSeats)
         {
@@ -55,6 +52,7 @@ void showAvailableSeats(int flightnumber, std::map<int, std::vector<std::tuple<i
         return false;
     };
 
+    //main seating chart
     std::cout << "\n╔════════════════════════════════════════════════════════════╗\n";
     std::cout << "║              AIRPLANE SEATING CHART                        ║\n";
     std::cout << "╠════════════════════════════════════════════════════════════╣\n";
@@ -65,26 +63,15 @@ void showAvailableSeats(int flightnumber, std::map<int, std::vector<std::tuple<i
     std::cout << "║               |  A  B     C  D  E   |                      ║\n";
     std::cout << "║               |                     |                      ║\n";
 
-    for (int i = 0; i < 10; i++)
-    {
-        std::cout << "║               |  "; // left margin + start of row
+    for (int i = 0; i < 10; i++) { //iterate through 10 rows (top to bottom)
+        std::cout << "║               |  "; 
+        for (int j = 0; j < 5; j++) { //iterate through 5 cols (left to right)
+       
+            if (j == 2) {std::cout << "   ";}
+            if (checkIfTaken(i + 1, 'A' + j)) { std::cout << "X  "; }
+            else { std::cout << "O  "; }
 
-        for (int j = 0; j < 5; j++)
-        {
-            // Add aisle space between B and C (between j=1 and j=2)
-            if (j == 2)
-                std::cout << "   ";
-
-            if (checkIfTaken(i + 1, 'A' + j))
-            {
-                std::cout << "X  ";
-            }
-            else
-            {
-                std::cout << "O  ";
-            }
         }
-
         std::cout << " |                      ║\n";
     }
 
@@ -96,7 +83,7 @@ void showAvailableSeats(int flightnumber, std::map<int, std::vector<std::tuple<i
     std::cout << "╚════════════════════════════════════════════════════════════╝\n\n";
 }
 
-int showFlights(std::vector<Flight> flights)
+int showFlights(std::vector<Flight> &flights)
 {
 
     for (const auto &flight : flights)
@@ -114,6 +101,7 @@ int showFlights(std::vector<Flight> flights)
     std::cout << "Select a flight number to see available seeting: ";
     std::cin >> flightnum;
     return flightnum;
+
 }
 
 char makeChoice()
@@ -131,38 +119,48 @@ std::vector<Flight> getFlights()
     std::ifstream file("flights.csv");
 
     if (!file.is_open())
-    { // failed to open file
+    { 
         std::cerr << "Failed to open file: flights.csv " << std::endl;
         return flights;
     }
 
     std::string line;
 
-    while (std::getline(file, line))
+    while (std::getline(file, line)) //reading each line in the file and storing it into 'line' 
     {
+        std::stringstream ss(line); //storing the 'line' into the string stream
+        std::string cell; //cell will store each CSV individual value
 
-        std::vector<std::string> row; // vector of strings
-        std::stringstream ss(line);
-        std::string cell;
+        std::vector<std::string> row; //row will contain the cells
 
-        while (std::getline(ss, cell, ','))
+        while (std::getline(ss, cell, ',')) //reading from ss with ',' delimeter and storing each value into cell
         {
-            row.push_back(cell);
+            row.push_back(cell); //push cell into the 'row' array
         }
 
-        Flight newFlight(std::stoi(row[0]), row[1], row[2], row[3], row[4]); // constructing new flight
+        Flight newFlight(std::stoi(row[0]), row[1], row[2], row[3], row[4]); //constructing new flight
         flights.push_back(newFlight);
     }
+
     file.close();
 
     return flights;
 }
 
-bool seatIsTaken(int flightnum, int r, char c)
+bool seatIsTaken(int flightnum, int r, char c, std::map<int, std::vector<Reservation>> reservations)
 {
-    // query reservations.csv by flight number
-    // find all reservatons by flight number and store in std::vector<Reservations>
+    //query reservations.csv by flight number
+    //find all reservatons by flight number and store in std::vector<Reservations>
 
+    auto it = reservations.find(flightnum);
+
+    for (const auto& taken : it->second) {
+        if (taken.seatcol == c && taken.seatrow == r) {
+            return true;
+        }
+    }
+    return false;
+/*
     std::ifstream file("reservations.csv");
 
     if (!file.is_open())
@@ -193,6 +191,7 @@ bool seatIsTaken(int flightnum, int r, char c)
         }
     }
     return false;
+    */
 }
 
 void writeToReservationCSV(Reservation reservation)
@@ -268,7 +267,7 @@ std::map<int, std::vector<Reservation>> getReservations(const std::map<int, Pass
 
         int passengerID = std::stoi(row[1]);
 
-        // SAFE lookup
+        //SAFE lookup
         auto passIt = passengers.find(passengerID);
 
         if (passIt == passengers.end())
@@ -280,16 +279,16 @@ std::map<int, std::vector<Reservation>> getReservations(const std::map<int, Pass
 
         const Passenger &p = passIt->second; // no copy
 
-        // Extract reservation details
+        //Extract reservation details
         int flightNum = std::stoi(row[0]);
         int rowNum = std::stoi(row[2]);
         char seatCol = row[3][0];
         int confirmation = std::stoi(row[4]);
 
-        // Build reservation
+        //Build reservation
         Reservation r(flightNum, p, rowNum, seatCol, confirmation);
 
-        // Insert directly into vector (auto-creates if missing)
+        //Insert directly into vector (auto-creates if missing)
         reservations[p.id].push_back(r);
     }
 
@@ -403,7 +402,7 @@ int generateRandom()
     return randomNum;
 }
 
-bool makeReservation(Passenger p, int flightNumber)
+bool makeReservation(Passenger p, int flightNumber, std::map<int, std::vector<Reservation>> reservations)
 {
 
     bool validSeat = false;
@@ -412,7 +411,7 @@ bool makeReservation(Passenger p, int flightNumber)
     {
         auto [row, col] = getRowandCol();
 
-        if (seatIsTaken(flightNumber, row, col))
+        if (seatIsTaken(flightNumber, row, col, reservations))
         {
             std::cout << "That seat is taken. Enter a new seat.\n"
                       << std::endl;
@@ -565,7 +564,6 @@ bool deleteReservation(std::map<int, std::vector<Reservation>> allReservations, 
 
     for (const auto &reservation : userReservations)
     {
-
         if (reservation.confirmation == chosenConfirmation)
         {
             // user entered valid reservation -> now update the file
@@ -631,18 +629,16 @@ std::map<int, std::vector<std::tuple<int, char>>> getSeats()
 
 int main()
 {
-
     displayWelcome();
     std::map<int, Passenger> passengers = getPassengers();                              // map that maps id to a passenger
     std::vector<Flight> flights = getFlights();                                         // getting all flight info
     std::map<int, std::vector<Reservation>> reservations = getReservations(passengers); // getting all reservatioms
-    std::map<int, std::vector<std::tuple<int, char>>> seats = getSeats();               // getting all seats by flight id
-
+    std::map<int, std::vector<std::tuple<int, char>>> seats = getSeats();      
+    
     char choice = makeChoice();
 
     if (choice == '1') // making a reservation
     {
-
         int flightNumber = showFlights(flights); // showing flights and getting flight number
         showAvailableSeats(flightNumber, seats); // showing available seats for flight number
 
@@ -665,7 +661,7 @@ int main()
                 if (isvalid)
                 {
 
-                    bool success = makeReservation(p, flightNumber);
+                    bool success = makeReservation(p, flightNumber, reservations);
 
                     if (success)
                     {
@@ -682,7 +678,7 @@ int main()
 
                 std::cout << "Successfully registered: " << p.firstName << " " << p.lastName << " " << "with id: " << p.id << std::endl;
 
-                bool success = makeReservation(p, flightNumber);
+                bool success = makeReservation(p, flightNumber, reservations);
 
                 if (success)
                 {
