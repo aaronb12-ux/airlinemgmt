@@ -128,7 +128,7 @@ std::vector<Flight> getFlights()
 
     while (std::getline(file, line)) //reading each line in the file and storing it into 'line' 
     {
-        std::stringstream ss(line); //storing the 'line' into the string stream
+        std::stringstream ss(line); //storing the 'line' into the string stream 
         std::string cell; //cell will store each CSV individual value
 
         std::vector<std::string> row; //row will contain the cells
@@ -147,57 +147,26 @@ std::vector<Flight> getFlights()
     return flights;
 }
 
-bool seatIsTaken(int flightnum, int r, char c, std::map<int, std::vector<Reservation>> reservations)
+bool seatIsTaken(int flightnum, int r, char c, std::map<int, std::vector<std::tuple<int, char>>>  seats)
 {
-    //query reservations.csv by flight number
-    //find all reservatons by flight number and store in std::vector<Reservations>
 
-    auto it = reservations.find(flightnum);
+    auto it = seats.find(flightnum);
 
-    for (const auto& taken : it->second) {
-        if (taken.seatcol == c && taken.seatrow == r) {
+    for (const auto& seatTuple : it->second) {
+        
+        if (std::get<0>(seatTuple) == r && std::get<1>(seatTuple) == c) {
             return true;
         }
     }
+
     return false;
-/*
-    std::ifstream file("reservations.csv");
 
-    if (!file.is_open())
-    {
-        std::cerr << "failed to open 'reservations.csv'" << std::endl;
-        return false;
-    }
-
-    std::string line;
-
-    while (std::getline(file, line))
-    {
-        std::vector<std::string> row;
-        std::stringstream ss(line);
-        std::string cell;
-
-        while (std::getline(ss, cell, ','))
-        {
-            row.push_back(cell);
-        }
-
-        std::string new_cell = row[3];
-        char char_row = new_cell[0];
-
-        if (std::stoi(row[0]) == flightnum && (std::stoi(row[2]) == r && char_row == c))
-        {
-            return true;
-        }
-    }
-    return false;
-    */
 }
 
 void writeToReservationCSV(Reservation reservation)
 {
     std::ofstream outputFile;
-    outputFile.open("reservations.csv", std::ios::app); // for appending to file
+    outputFile.open("reservations.csv", std::ios::app); //for appending to file
 
     if (!outputFile.is_open())
     {
@@ -216,8 +185,10 @@ std::pair<int, char> getRowandCol()
 
     std::cout << "Select a row 1 - 10: ";
     std::cin >> row;
+    std::cout << "you selected row:" << row;
     std::cout << "Select a column A - E: ";
     std::cin >> col;
+
     return {row, col};
 }
 
@@ -334,6 +305,7 @@ bool askFirstReservation()
     std::cout << "Have you made a reservation with us before? Enter 'Y' (Yes) or 'N' (No): ";
 
     std::cin >> response;
+
     std::cout << "\n";
 
     return response == 'Y';
@@ -402,16 +374,17 @@ int generateRandom()
     return randomNum;
 }
 
-bool makeReservation(Passenger p, int flightNumber, std::map<int, std::vector<Reservation>> reservations)
+bool makeReservation(Passenger p, int flightNumber, std::map<int, std::vector<std::tuple<int, char>>> seats)
 {
 
     bool validSeat = false;
 
     while (!validSeat)
     {
-        auto [row, col] = getRowandCol();
 
-        if (seatIsTaken(flightNumber, row, col, reservations))
+        auto [row, col] = getRowandCol();
+        
+        if (seatIsTaken(flightNumber, row, col, seats))
         {
             std::cout << "That seat is taken. Enter a new seat.\n"
                       << std::endl;
@@ -661,7 +634,7 @@ int main()
                 if (isvalid)
                 {
 
-                    bool success = makeReservation(p, flightNumber, reservations);
+                    bool success = makeReservation(p, flightNumber, seats);
 
                     if (success)
                     {
@@ -678,7 +651,7 @@ int main()
 
                 std::cout << "Successfully registered: " << p.firstName << " " << p.lastName << " " << "with id: " << p.id << std::endl;
 
-                bool success = makeReservation(p, flightNumber, reservations);
+                bool success = makeReservation(p, flightNumber, seats);
 
                 if (success)
                 {
